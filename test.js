@@ -365,4 +365,4 @@ app.post('/student/submission',(req,res)=>
 		}
 	res.json("success");
 });
-app.listen(3000);
+app.listen(process.env.port || 3000);
