@@ -1,17 +1,18 @@
 const express =require('express');
 const bodyParser=require('body-parser');
 const app=express();
+const fs=require('fs');
 var cors = require('cors')
 app.use(cors());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 var mysql = require('mysql')
-var connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'shreyash',
-  database: 'rvision'
-})
+var connection = mysql.createConnection({host: "shreyashazure.mysql.database.azure.com", 
+										user: "shreyash@shreyashazure", 
+										password: "assassin1@", 
+										database: "rvision", 
+										port: 3306, 
+										ssl:{ca:fs.readFileSync("./BaltimoreCyberTrustRoot.crt.pem")}});
 
 connection.connect((err)=>
 {
@@ -19,7 +20,11 @@ connection.connect((err)=>
 		throw err;
 	console.log("Connected to databsase")
 })
-app.post('/studentSignUp',(req,res)=>
+app.get('/',function (req,res){
+	console.log("here");
+	res.send('<h1>OH HI THERE, <br>THIS IS RVISION API</h1>');
+})
+app.post('/studentSignUp',(res,req)=>
 {
 		// const {name,email,password}=req.body;
 		// const hash=bcrypt.hashSync(password);
@@ -348,6 +353,7 @@ app.post('/student/submission',(req,res)=>
 		console.log(req.body);
 		let {USN,AnsIds,QIDs,TestID,Score,Qtypes,SubmissionID}=req.body;
 		console.log(req.body);
+		
 		connection.query(`INSERT INTO submission VALUES('${SubmissionID}','${USN}','${TestID}','0')`, function (err, rows, fields) {
 			if (err)
 				throw err;	
@@ -365,4 +371,6 @@ app.post('/student/submission',(req,res)=>
 		}
 	res.json("success");
 });
-app.listen(process.env.port || 3000);
+app.listen(3000, () => {
+	console.log(`Example app listening at ${connection.config.host}: ${3000}`)
+  })
