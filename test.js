@@ -371,6 +371,6 @@ app.post('/student/submission',(req,res)=>
 		}
 	res.json("success");
 });
-app.listen(3000, () => {
+app.listen(process.env.port || 3000, () => {
 	console.log(`Example app listening at ${connection.config.host}: ${3000}`)
   })
