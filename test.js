@@ -372,5 +372,28 @@ app.post('/student/submission',(req,res)=>
 	res.json("success");
 });
 app.listen(process.env.PORT || 3000, () => {
-	console.log(`Example app listening at${process.env.PORT}`)
+	console.log(`app listening at ${process.env.PORT}`)
   })
+  app.post('/faculty/evaluate',(req,res)=>
+  {
+		  let {FID}=req.body;
+  
+		  connection.query(`select AnswerID,QID from 
+							answer natural join qas
+							where answer.AnswerID IN
+							(select AnswerID from
+							question natural join qas
+							where FID="${FID}") AND answer.Score=0
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			  // console.log(rows[0].Password)
+			  console.log(req.body)
+			if(rows.length)
+			{
+				res.json(rows);
+			}
+			else
+				res.json("error")	
+		  })
+  });
