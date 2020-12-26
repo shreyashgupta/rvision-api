@@ -379,11 +379,11 @@ app.listen(process.env.PORT || 3000, () => {
 		  let {FID}=req.body;
   
 		  connection.query(`select AnswerID,QID from 
-							answer natural join qas
+							answer natural join qas natr
 							where answer.AnswerID IN
 							(select AnswerID from
 							question natural join qas
-							where FID="${FID}") AND answer.Score=0
+							where FID="${FID}") AND AnswerType="Sub"
 							  `, function (err, rows, fields) {
 			  if (err)
 				  throw err;
