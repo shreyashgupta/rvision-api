@@ -1,18 +1,22 @@
 const express =require('express');
 const bodyParser=require('body-parser');
 const app=express();
+const admin = require('firebase-admin');
+admin.initializeApp();
+
+const firestore = admin.firestore();
 const fs=require('fs');
 var cors = require('cors')
 app.use(cors());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 var mysql = require('mysql')
-var connection = mysql.createConnection({host: "shreyashazure.mysql.database.azure.com", 
-										user: "shreyash@shreyashazure", 
-										password: "assassin1@", 
+var connection = mysql.createConnection(
+										{host: "3.129.230.190", 
+										user: "ubuntu",
+										password: "qwerty", 
 										database: "rvision", 
-										port: 3306, 
-										ssl:{ca:fs.readFileSync("./BaltimoreCyberTrustRoot.crt.pem")}});
+										port: 3306});
 
 connection.connect((err)=>
 {
@@ -374,7 +378,7 @@ app.post('/student/submission',(req,res)=>
 app.listen(process.env.PORT || 3000, () => {
 	console.log(`app listening at ${process.env.PORT}`)
   })
-  app.post('/faculty/evaluate',(req,res)=>
+  app.post('/faculty/subEvaluate',(req,res)=>
   {
 		  let {FID}=req.body;
   
@@ -396,4 +400,27 @@ app.listen(process.env.PORT || 3000, () => {
 			else
 				res.json("error")	
 		  })
+  });
+  app.get('/faculty/evaluate/getTests',(req,res)=>
+  {
+		  connection.query(`select TestID from 
+		  					submission natural join test
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			  // console.log(rows[0].Password)
+			  console.log(req.body)
+			if(rows.length)
+			{
+				res.json(rows);
+			}
+			else
+				res.json("error")	
+		  })
+  });
+  app.post('/faculty/evaluate',(req,res)=>
+  {
+	  let {TestID}=req.body;
+	  console.log(TestID);
+	//   select SubmissionID from submission where Tese
   });
