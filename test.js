@@ -33,14 +33,15 @@ app.get('/',async function (req,res){
 	res.send('<h1>OH HI THERE, <br>THIS IS RVISION API</h1>');
 	  
 })
-app.post('/studentSignUp',(res,req)=>
+app.post('/studentSignUp',(req,res)=>
 {
 		// const {name,email,password}=req.body;
 		// const hash=bcrypt.hashSync(password);
+		console.log(req.body);
 		let {Password,USN,Email,Batch,Fname,Lname,Image,Phone_no,Department,Semester,DoB,Courses}=req.body;
 		console.log(req.body)
 		// console.log(typeof(Name))
-		connection.query(`INSERT INTO Student VALUES('${USN}','${Fname}','${Lname}','${Email}','${Password}','${Image}','${Department}','${Phone_no}','${Semester}','${DoB}')`, function (err, rows, fields) {
+		connection.query(`INSERT INTO student VALUES('${USN}','${Fname}','${Lname}','${Email}',md5('${Password}'),'${Image}','${Department}','${Phone_no}','${Semester}','${DoB}')`, function (err, rows, fields) {
 			if (err)
 				throw err;
 		  console.log('The solution is: ' , rows)
@@ -63,17 +64,18 @@ app.post('/studentSignIn',(req,res)=>
 		let {Password,Email}=req.body;
 		console.log(req.body)
 		// console.log(typeof(Name))
-		connection.query(`SELECT * FROM Student WHERE Email='${Email}'`, function (err, rows, fields) {
+		connection.query(`SELECT * FROM student WHERE Email='${Email}' AND Password=md5('${Password}')`, function (err, rows, fields) {
 			if (err)
 				throw err;
 			// console.log(rows[0].Password)
 		  if(rows.length)
 		  {
-		  	console.log(rows[0])
-		  	if(rows[0].Password==Password)
-		  		res.json("success");
-		  	else
-		  		res.json("Wrong Credentials")
+			  console.log(rows[0])
+			  res.json("success");
+		  }
+		  else
+		  {
+			  res.json("Wrong credentials");
 		  }
 		})
 });
@@ -84,7 +86,7 @@ app.post('/student/viewProfile',(req,res)=>
 		let {Email}=req.body;
 		console.log(req.body)
 		// console.log(typeof(Name))
-		connection.query(`SELECT * FROM Student WHERE Email='${Email}'`, function (err, rows, fields) {
+		connection.query(`SELECT * FROM student WHERE Email='${Email}'`, function (err, rows, fields) {
 			if (err)
 				throw err;
 			// console.log(rows[0].Password)
@@ -104,7 +106,7 @@ app.post('/facultySignUp',(req,res)=>
 		let {Password,FID,Email,Batch,Fname,Lname,Image,Phone_no,Department,Semester,DoB,Courses}=req.body;
 		console.log(req.body)
 		// // console.log(typeof(Name))
-		connection.query(`INSERT INTO faculty VALUES('${FID}','${Fname}','${Lname}','${Email}','${Password}','${Image}','${Department}','${Phone_no}','${DoB}')`, function (err, rows, fields) {
+		connection.query(`INSERT INTO faculty VALUES('${FID}','${Fname}','${Lname}','${Email}',md5('${Password}'),'${Image}','${Department}','${Phone_no}','${DoB}')`, function (err, rows, fields) {
 			if (err)
 				throw err;
 
@@ -128,17 +130,18 @@ app.post('/facultySignIn',(req,res)=>
 		let {Password,Email}=req.body;
 		console.log(req.body)
 		// console.log(typeof(Name))
-		connection.query(`SELECT * FROM faculty WHERE Email='${Email}'`, function (err, rows, fields) {
+		connection.query(`SELECT * FROM faculty WHERE Email='${Email}' AND Password=md5('${Password}')`, function (err, rows, fields) {
 			if (err)
 				throw err;
 			// console.log(rows[0].Password)
 		  if(rows.length)
 		  {
 		  	console.log(rows[0])
-		  	if(rows[0].Password==Password)
-		  		res.json("success");
-		  	else
-		  		res.json("Wrong Credentials")
+		  	res.json("Login Success");
+		  }
+		  else 
+		  {
+			  res.json("Wrong credentials");
 		  }
 		})
 });
@@ -369,6 +372,7 @@ app.post('/student/submission',(req,res)=>
 		})
 		for(let i=0;i<QIDs.length;i++)
 		{
+			console.log(AnsIds[i] + ", "+ Qtypes[i]);
 		connection.query(`INSERT INTO answer VALUES('${AnsIds[i]}','${USN}','${Qtypes[i]}','0')`, function (err, rows, fields) {
 			if (err)
 				throw err;	
