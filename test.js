@@ -2,8 +2,12 @@ const express =require('express');
 const bodyParser=require('body-parser');
 const app=express();
 const admin = require('firebase-admin');
-admin.initializeApp();
 
+const serviceAccount = require('./key.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 const firestore = admin.firestore();
 const fs=require('fs');
 var cors = require('cors')
@@ -24,9 +28,10 @@ connection.connect((err)=>
 		throw err;
 	console.log("Connected to databsase")
 })
-app.get('/',function (req,res){
+app.get('/',async function (req,res){
 	console.log("here");
 	res.send('<h1>OH HI THERE, <br>THIS IS RVISION API</h1>');
+	  
 })
 app.post('/studentSignUp',(res,req)=>
 {
@@ -403,7 +408,7 @@ app.listen(process.env.PORT || 3000, () => {
   });
   app.get('/faculty/evaluate/getTests',(req,res)=>
   {
-		  connection.query(`select TestID from 
+		connection.query(`select TestID from 
 		  					submission natural join test
 							  `, function (err, rows, fields) {
 			  if (err)
@@ -418,9 +423,108 @@ app.listen(process.env.PORT || 3000, () => {
 				res.json("error")	
 		  })
   });
-  app.post('/faculty/evaluate',(req,res)=>
+  let updateSubmission=(TestID)=>
+  {
+	connection.query(`select SubmissionID from
+			submission where TestID='${TestID}' 
+		`, function (err, rows, fields) {
+			if (err)
+			throw err;
+			rows.map((x,i)=>
+			{
+			connection.query(`UPDATE submission 
+								SET Score = (
+								SELECT sum(Score) FROM answer
+								WHERE AnswerID IN (SELECT AnswerID FROM qas WHERE SubmissionID='${x.SubmissionID}')
+								)
+								WHERE SubmissionID='${x.SubmissionID}'
+				`, function (err, rows, fields) {
+			if (err)
+				throw err;
+			console.log("updated sub");
+			})								
+			})
+			})
+  }
+  app.post('/faculty/evaluate',async(req,res)=>
   {
 	  let {TestID}=req.body;
-	  console.log(TestID);
+	  let qas=[];
+	  connection.query(`select * from qas
+						where SubmissionID in
+						(select SubmissionID from
+						submission where TestID='${TestID}' )
+					`, async function (err, rows, fields) {
+						if (err)
+							throw err;
+						// console.log(rows[0].Password)
+						//console.log(rows)
+						if(rows.length)
+						{
+							rows.map(async(x,i)=>
+							{
+								let aid=x.AnswerID;
+								let qid=x.QID;
+								let ans,ques;
+								await firestore.collection("answer").doc(aid)
+								.get()
+								.then(function(doc) {
+								if (doc.exists) {
+									ans=doc.data();
+								} else {
+									console.log("No such document!");
+								}
+								}).catch(function(error) {
+								console.log("Error getting document:", error);
+								}); 
+					
+								await firestore.collection("question").doc(qid)
+								.get()
+								.then(function(doc) {
+								if (doc.exists) {
+									ques=doc.data();
+								} else {
+									console.log("No such document!");
+								}
+								}).catch(function(error) {
+								console.log("Error getting document:", error);
+								}); 
+								//console.log(ques,ans);
+								let score=ques.score;
+								let flag=false;
+								//console.log(score);
+								if(ques.questionType=='Sub');
+								else if(ques.questionType=='MCQ')
+								{
+									if(ques.correctChoice==ans.chosenOption)
+									{
+										flag=true;
+									}
+								}
+								else
+								{
+									// console.log(ques.acceptedAnswers,ans.answerContent);
+									if(ques.acceptedAnswers.indexOf(ans.answerContent)!=-1)
+										flag=true;
+								}
+								if(flag)
+								{
+									connection.query(`
+													UPDATE answer
+													SET Score='${score}' WHERE AnswerID='${aid}'
+												`, function (err, rows, fields) {
+												if (err)
+													throw err;
+												// console.log(rows[0].Password)
+									})
+								}
+							})
+							console.log("updating sub now")
+							updateSubmission(TestID);
+						}
+						else
+							res.json("error")	
+					})
+					
 	//   select SubmissionID from submission where Tese
   });
