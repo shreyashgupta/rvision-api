@@ -137,7 +137,7 @@ app.post('/facultySignIn',(req,res)=>
 		  if(rows.length)
 		  {
 		  	console.log(rows[0])
-		  	res.json("Login Success");
+		  	res.json("success");
 		  }
 		  else 
 		  {
@@ -392,7 +392,7 @@ app.listen(process.env.PORT || 3000, () => {
 		  let {FID}=req.body;
   
 		  connection.query(`select AnswerID,QID from 
-							answer natural join qas natr
+							answer natural join qas 
 							where answer.AnswerID IN
 							(select AnswerID from
 							question natural join qas
@@ -427,7 +427,7 @@ app.listen(process.env.PORT || 3000, () => {
 				res.json("error")	
 		  })
   });
-  let updateSubmission=(TestID)=>
+  let updateSubmission=async (TestID)=>
   {
 	connection.query(`select SubmissionID from
 			submission where TestID='${TestID}' 
@@ -441,11 +441,11 @@ app.listen(process.env.PORT || 3000, () => {
 								SELECT sum(Score) FROM answer
 								WHERE AnswerID IN (SELECT AnswerID FROM qas WHERE SubmissionID='${x.SubmissionID}')
 								)
-								WHERE SubmissionID='${x.SubmissionID}'
-				`, function (err, rows, fields) {
+								WHERE SubmissionID='${x.SubmissionID}'`, function (err, rows, fields) {
 			if (err)
 				throw err;
 			console.log("updated sub");
+			console.log(rows);
 			})								
 			})
 			})
@@ -524,7 +524,7 @@ app.listen(process.env.PORT || 3000, () => {
 								}
 							})
 							console.log("updating sub now")
-							updateSubmission(TestID);
+							await updateSubmission(TestID);
 						}
 						else
 							res.json("error")	
