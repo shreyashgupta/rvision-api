@@ -412,7 +412,7 @@ app.listen(process.env.PORT || 3000, () => {
   });
   app.get('/faculty/evaluate/getTests',(req,res)=>
   {
-		connection.query(`select TestID from 
+		connection.query(`select DISTINCT(TestID) from 
 		  					submission natural join test
 							  `, function (err, rows, fields) {
 			  if (err)
@@ -427,29 +427,35 @@ app.listen(process.env.PORT || 3000, () => {
 				res.json("error")	
 		  })
   });
-  let updateSubmission=async (TestID)=>
+  app.post('/faculty/updateSubmissions',async(req,res)=>
   {
-	connection.query(`select SubmissionID from
+		let {TestID}=req.body;
+		connection.query(`select SubmissionID from
 			submission where TestID='${TestID}' 
-		`, function (err, rows, fields) {
-			if (err)
-			throw err;
-			rows.map((x,i)=>
-			{
-			connection.query(`UPDATE submission 
-								SET Score = (
-								SELECT sum(Score) FROM answer
-								WHERE AnswerID IN (SELECT AnswerID FROM qas WHERE SubmissionID='${x.SubmissionID}')
-								)
-								WHERE SubmissionID='${x.SubmissionID}'`, function (err, rows, fields) {
-			if (err)
+			`, function (err, rows, fields) {
+				if (err)
 				throw err;
-			console.log("updated sub");
-			console.log(rows);
-			})								
+				if(rows.length)
+				{
+					rows.map((x,i)=>
+					{
+					connection.query(`UPDATE submission 
+										SET Score = (
+										SELECT sum(Score) FROM answer
+										WHERE AnswerID IN (SELECT AnswerID FROM qas WHERE SubmissionID='${x.SubmissionID}')
+										)
+										WHERE SubmissionID='${x.SubmissionID}'`, function (err, rows, fields) {
+										if (err)
+											throw err;
+										console.log("updated sub");
+										})
+					})			
+					res.json("success");				
+				}
+				else
+					res.json("error");
 			})
-			})
-  }
+  });
   app.post('/faculty/evaluate',async(req,res)=>
   {
 	  let {TestID}=req.body;
@@ -523,12 +529,75 @@ app.listen(process.env.PORT || 3000, () => {
 									})
 								}
 							})
-							console.log("updating sub now")
-							await updateSubmission(TestID);
+							res.json("success");
 						}
 						else
 							res.json("error")	
 					})
 					
 	//   select SubmissionID from submission where Tese
+  });
+  app.post('/faculty/fts/getTids',(req,res)=>
+  {
+		  let {semester,course,fromDate,toDate}=req.body;
+
+		  connection.query(`SELECT * FROM test t
+							WHERE CourseId='${course}' AND 
+							t.Date BETWEEN '${fromDate}' AND '${toDate}';
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			  // console.log(rows[0].Password)
+			  console.log(req.body);
+			  console.log(rows)
+			if(rows.length)
+			{
+				res.json(rows);
+			}
+			else
+				res.json("error")	
+		  })
+  });
+  app.post('/faculty/fts/updateTest',(req,res)=>
+  {
+		  let {TestID}=req.body;
+
+		  connection.query(`select TestID, count(distinct USN) 
+							as attemptedBy, max(Score) as maxScore, 
+							avg(Score) as avgScore, min(Score) as minScore
+		  					from submission
+		  					where TestID='${TestID}';
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			  // console.log(rows[0].Password)
+			  console.log(req.body);
+			  console.log(rows)
+			if(rows.length)
+			{
+				res.json(rows);
+			}
+			else
+				res.json("error")	
+		  })
+  });
+  app.post('/faculty/fts/USNScore',(req,res)=>
+  {
+		  let {TestID,USN}=req.body;
+
+		  connection.query(`SELECT Score FROM submission 
+		  WHERE USN='${USN}' AND TestID='${TestID}';
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			  // console.log(rows[0].Password)
+			  console.log(req.body);
+			  console.log(rows)
+			if(rows.length)
+			{
+				res.json(rows);
+			}
+			else
+				res.json("error")	
+		  })
   });
