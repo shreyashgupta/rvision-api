@@ -2,7 +2,7 @@ const express =require('express');
 const bodyParser=require('body-parser');
 const app=express();
 const admin = require('firebase-admin');
-
+const fetch = require('node-fetch');
 const serviceAccount = require('./key.json');
 
 admin.initializeApp({
@@ -441,7 +441,7 @@ app.listen(process.env.PORT || 3000, () => {
 					{
 					connection.query(`UPDATE submission 
 										SET Score = (
-										SELECT sum(Score) FROM answer
+										SELECT SUM(Score) FROM answer
 										WHERE AnswerID IN (SELECT AnswerID FROM qas WHERE SubmissionID='${x.SubmissionID}')
 										)
 										WHERE SubmissionID='${x.SubmissionID}'`, function (err, rows, fields) {
@@ -476,16 +476,17 @@ app.listen(process.env.PORT || 3000, () => {
 								let aid=x.AnswerID;
 								let qid=x.QID;
 								let ans,ques;
+								console.log(aid,qid)
 								await firestore.collection("answer").doc(aid)
 								.get()
 								.then(function(doc) {
 								if (doc.exists) {
 									ans=doc.data();
 								} else {
-									console.log("No such document!");
+									console.log("No such ans document!");
 								}
 								}).catch(function(error) {
-								console.log("Error getting document:", error);
+								console.log("Error getting ans document:", error);
 								}); 
 					
 								await firestore.collection("question").doc(qid)
@@ -494,41 +495,68 @@ app.listen(process.env.PORT || 3000, () => {
 								if (doc.exists) {
 									ques=doc.data();
 								} else {
-									console.log("No such document!");
+									console.log("No such ques document!");
 								}
 								}).catch(function(error) {
-								console.log("Error getting document:", error);
+								console.log("Error getting ques document:", error);
 								}); 
 								//console.log(ques,ans);
 								let score=ques.score;
 								let flag=false;
+								let subEval=false;
+								console.log(ques.questionType, ans.studentScore);
+								if(ques.questionType=='Sub' && ans.studentScore==-1)
+									subEval=true;
 								//console.log(score);
-								if(ques.questionType=='Sub');
+								if(subEval && ans.answerImages.length==0 && ques.modelAnswerAvailable)
+								{
+									var score1;
+
+									//evaluation 
+									score1=await fetch(`https://api.dandelion.eu/datatxt/sim/v1?token=bdaae0974cad4108b1ab79b35d0baaeb&text1=${ques.modelAnswer}&text2=${ans.answerText}`)
+									  .then(response=> response.json())
+									  .then(response=>response);
+									score=Math.ceil(score1.similarity*(ques.score));
+									flag=true;
+									console.log(score);
+								}
 								else if(ques.questionType=='MCQ')
 								{
 									if(ques.correctChoice==ans.chosenOption)
 									{
 										flag=true;
 									}
+									subEval=true;
 								}
-								else
+								else if(ques.questionType=='FIB')
 								{
 									// console.log(ques.acceptedAnswers,ans.answerContent);
 									if(ques.acceptedAnswers.indexOf(ans.answerContent)!=-1)
 										flag=true;
+									subEval=true;
 								}
-								if(flag)
+								if(!flag)
+								{
+									score=0;		// console.log(rows[0].Password)
+								}
+								if(subEval)
 								{
 									connection.query(`
-													UPDATE answer
-													SET Score='${score}' WHERE AnswerID='${aid}'
-												`, function (err, rows, fields) {
-												if (err)
-													throw err;
-												// console.log(rows[0].Password)
-									})
+									UPDATE answer
+									SET Score='${score}' WHERE AnswerID='${aid}'
+									`, function (err, rows, fields) {
+										if (err)
+											throw err;
+									}
+									)
+									const ansref = firestore.collection('answer').doc(aid);
+									const res = await ansref.update({studentScore:score})
+									.catch(function(error) {
+										console.log("Error getting document:", error);
+										}); 
 								}
-							})
+								}
+							)
 							res.json("success");
 						}
 						else
@@ -600,4 +628,34 @@ app.listen(process.env.PORT || 3000, () => {
 			else
 				res.json("error")	
 		  })
+  });
+
+  app.post('/faculty/subjectiveEval',(req,res)=>
+  {
+		  let {AnswerID,Score}=req.body;
+		  console.log(req.body);
+
+		  connection.query(`UPDATE answer
+							  SET Score=Score+'${Score}'
+							  WHERE AnswerId='${AnswerID}'
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			if(rows.length==0)
+				res.json("error")	
+		  })
+		  connection.query(`UPDATE submission
+							SET Score=Score+'${Score}'
+							WHERE SubmissionID =
+							(
+								SELECT SubmissionID FROM qas
+								WHERE AnswerID='${AnswerID}'
+							);
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			if(rows.length==0)
+				res.json("error")	
+		  })
+		  res.json("success");
   });
