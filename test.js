@@ -659,3 +659,18 @@ app.listen(process.env.PORT || 3000, () => {
 		  })
 		  res.json("success");
   });
+  app.post('/student/getCourses',(req,res)=>
+  {
+		  let {USN}=req.body;
+		  connection.query(`SELECT CourseId FROM 
+		  					enrollment WHERE USN='${USN}'
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			if(rows.length)
+				res.json(rows)
+			else
+				res.json("error")
+					
+		  })
+  });
