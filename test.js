@@ -674,3 +674,53 @@ app.listen(process.env.PORT || 3000, () => {
 					
 		  })
   });
+  app.post('/student/report/getTests',(req,res)=>
+  {
+		  let {USN,course,fromDate,toDate}=req.body;
+		  connection.query(`
+							SELECT TestID, SubmissionID,Date,Score
+							FROM test NATURAL JOIN submission
+							WHERE CourseId='${course}' AND USN='${USN}' AND Date BETWEEN '${fromDate}' AND '${toDate}';
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			if(rows.length)
+				res.json(rows)
+			else
+				res.json("error")
+					
+		  })
+  });
+  app.post('/student/report/getSummary',(req,res)=>
+  {
+		  let {TestID}=req.body;
+		  connection.query(`SELECT TestID, COUNT(distinct USN) AS attemptedBy, MAX(Score) AS maxScore, AVG(Score) AS avgScore, MIN(Score) AS minScore
+		  FROM submission
+		  WHERE TestID='${TestID}';
+							  `, function (err, rows, fields) {
+			  if (err)
+				  throw err;
+			if(rows.length)
+				res.json(rows)
+			else
+				res.json("error")
+					
+		  })
+  });
+  app.post('/student/getSubmission',(req,res)=>
+  {
+		  let {sid}=req.body;
+		  connection.query(`SELECT AnswerID,QID 
+							  FROM qas 
+							  WHERE SubmissionID='${sid}'
+							  `, function (err, rows, fields) {
+			if (err)
+				  throw err;
+			console.log(rows);					
+			if(rows.length)
+				res.json(rows)
+			else
+				res.json("error")
+					
+		  })
+  });
