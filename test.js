@@ -727,7 +727,7 @@ app.listen(process.env.PORT || 3000, () => {
   app.post('/changePassword',(req,res)=>
   {
 		  let {Email,OldPass,NewPass}=req.body;
-		  consolelog(Email,OldPass,NewPass);
+		  console.log(Email,OldPass,NewPass);
 		//   connection.query(`SELECT AnswerID,QID 
 		// 					  FROM qas 
 		// 					  WHERE SubmissionID='${sid}'
