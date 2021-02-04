@@ -726,18 +726,35 @@ app.listen(process.env.PORT || 3000, () => {
   });
   app.post('/changePassword',(req,res)=>
   {
-		  let {Email,OldPass,NewPass}=req.body;
-		  console.log(Email,OldPass,NewPass);
-		//   connection.query(`SELECT AnswerID,QID 
-		// 					  FROM qas 
-		// 					  WHERE SubmissionID='${sid}'
-		// 					  `, function (err, rows, fields) {
-		// 	if (err)
-		// 		  throw err;
-		// 	console.log(rows);					
-		// 	if(rows.length)
-		// 		res.json(rows)
-		// 	else
-		// 		res.json("error")		
-		//   })
+		let {Email,OldPass,NewPass,Student}=req.body;
+		console.log(Email,OldPass,NewPass,Student);
+		if(Student)
+		{
+			connection.query(`UPDATE student 
+								SET Password=md5('${NewPass}')
+								WHERE Email='${Email}' AND Password=md5('${OldPass}')
+								`, function (err, rows, fields) {
+			if (err)
+					throw err;				
+			if(rows.length)
+				res.json("success")
+			else
+				res.json("error")		
+			})
+		}
+		else
+		{
+			connection.query(`UPDATE faculty
+								SET Password=md5('${NewPass}')
+								WHERE Email='${Email}' AND Password=md5('${OldPass}')
+								`, function (err, rows, fields) {
+			if (err)
+					throw err;				
+			if(rows.length)
+				res.json("success")
+			else
+				res.json("error")		
+			})
+		}
+
   });
