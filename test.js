@@ -734,6 +734,8 @@ app.listen(process.env.PORT || 3000, () => {
 								SET Password=md5('${NewPass}')
 								WHERE Email='${Email}' AND Password=md5('${OldPass}')
 								`, function (err, rows, fields) {
+			
+			console.log(rows);
 			if (err)
 					throw err;				
 			else
@@ -746,6 +748,7 @@ app.listen(process.env.PORT || 3000, () => {
 								SET Password=md5('${NewPass}')
 								WHERE Email='${Email}' AND Password=md5('${OldPass}')
 								`, function (err, rows, fields) {
+
 			if (err)
 					throw err;				
 			else
