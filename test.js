@@ -735,7 +735,7 @@ app.listen(process.env.PORT || 3000, () => {
 								WHERE Email='${Email}' AND Password=md5('${OldPass}')
 								`, function (err, rows, fields) {
 			
-			console.log(rows);
+			console.log(rows.affectedRows);
 			if (err)
 					throw err;				
 			else
