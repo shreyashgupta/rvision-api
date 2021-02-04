@@ -724,3 +724,20 @@ app.listen(process.env.PORT || 3000, () => {
 					
 		  })
   });
+  app.post('/changePassword',(req,res)=>
+  {
+		  let {Email,OldPass,NewPass}=req.body;
+		  consolelog(Email,OldPass,NewPass);
+		//   connection.query(`SELECT AnswerID,QID 
+		// 					  FROM qas 
+		// 					  WHERE SubmissionID='${sid}'
+		// 					  `, function (err, rows, fields) {
+		// 	if (err)
+		// 		  throw err;
+		// 	console.log(rows);					
+		// 	if(rows.length)
+		// 		res.json(rows)
+		// 	else
+		// 		res.json("error")		
+		//   })
+  });
