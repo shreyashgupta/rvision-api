@@ -736,10 +736,8 @@ app.listen(process.env.PORT || 3000, () => {
 								`, function (err, rows, fields) {
 			if (err)
 					throw err;				
-			if(rows.length)
-				res.json("success")
 			else
-				res.json("error")		
+				res.json("success")		
 			})
 		}
 		else
@@ -750,10 +748,8 @@ app.listen(process.env.PORT || 3000, () => {
 								`, function (err, rows, fields) {
 			if (err)
 					throw err;				
-			if(rows.length)
-				res.json("success")
 			else
-				res.json("error")		
+				res.json("success")		
 			})
 		}
 
