@@ -735,11 +735,12 @@ app.listen(process.env.PORT || 3000, () => {
 								WHERE Email='${Email}' AND Password=md5('${OldPass}')
 								`, function (err, rows, fields) {
 			
-			console.log(rows.affectedRows);
 			if (err)
 					throw err;				
-			else
-				res.json("success")		
+			if(rows.affectedRows)
+				res.json("success")	
+			else	
+				res.json("error")	
 			})
 		}
 		else
@@ -751,8 +752,10 @@ app.listen(process.env.PORT || 3000, () => {
 
 			if (err)
 					throw err;				
-			else
-				res.json("success")		
+			if(rows.affectedRows)
+					res.json("success")	
+			else	
+					res.json("error")		
 			})
 		}
 
